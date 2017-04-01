@@ -151,6 +151,7 @@ namespace DI.VisualScripting {
 			RemoveComponent();
 		}
 		#endregion
+
 		#region VIRTUAL WINDOW
 		/// <summary>
 		/// This method only works at Unity Editor, warp it with define UnityEditor
@@ -272,8 +273,9 @@ namespace DI.VisualScripting {
 		/// </summary>
 		/// <param name="rootParent">Root, can be .asset / prefab / null</param>
 		/// <param name="previous">fill only if you want to duplicate mode</param>
-		public virtual void SaveComponent(UnityEngine.Object rootParent, DIVisualComponent previous) {
-			this._SaveComponent(rootParent, previous);	
+		/// <param name="autoAssignNextComponentOfPrevious">jadi result.previous.next akan diassign otomatis, jika component hasil dari percabangan (ex : branch, if) atur ke false untuk menonaktifkan automatisasi</param>
+		public virtual DIVisualComponent SaveComponent(UnityEngine.Object rootParent, DIVisualComponent previous, bool autoAssignNextComponentOfPrevious = true) {
+			return this._SaveComponent(rootParent, previous, autoAssignNextComponentOfPrevious);	
 		}
 		public virtual void LateShowWindow()
 		{

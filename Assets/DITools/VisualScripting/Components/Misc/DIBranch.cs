@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
 namespace DI.VisualScripting {
 	[VisualComponent("Misc")]
@@ -77,20 +78,22 @@ namespace DI.VisualScripting {
 		}
 		public override void ConnectButton()
 		{	}
-		public override void SaveComponent(Object rootParent, DIVisualComponent previous = null)
+		public override DIVisualComponent SaveComponent(UnityEngine.Object rootParent, DIVisualComponent previous = null, bool autoAssignNextComponentOfPrevious = true)
 		{
-			base.SaveComponent(rootParent, previous);
+			DIBranch _branch = base.SaveComponent(rootParent, previous, autoAssignNextComponentOfPrevious) as DIBranch;
 			for (int i = 0; i < splitedComponent.Count; i++)
 			{
 				if (splitedComponent[i] != null)
 				{
-					splitedComponent[i].SaveComponent(rootParent, this);
+					//splitedComponent[i].SaveComponent(rootParent, this);
+					_branch.splitedComponent[i] = splitedComponent[i].SaveComponent(rootParent, _branch, false);
 				}
 				else
 				{
 					RemoveBranch(i);
 				}
 			}
+			return _branch;
 		}
 		DIVisualComponent AddBranch() {
 			DIVisualComponent comp = (DIVisualComponent.CreateInstance<DIVisualComponent>());
@@ -99,6 +102,7 @@ namespace DI.VisualScripting {
 			comp.position.position += Vector2.up * (position.height + 45);
 			return comp;
 		}
+
 		void RemoveBranch() {
 			DIVisualComponent removedComp = splitedComponent[splitedComponent.Count - 1];
 			if (removedComp != null)

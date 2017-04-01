@@ -67,13 +67,14 @@ namespace DI.VisualScripting {
 			UnityEditor.EditorGUILayout.EndHorizontal();
 		}
 
-		public override void SaveComponent(Object rootParent, DIVisualComponent previous)
+		public override DIVisualComponent SaveComponent(Object rootParent, DIVisualComponent previous, bool autoAssignNextComponentOfPrevious = true)
 		{
-			base.SaveComponent(rootParent, previous);
-			if (trueEvent != null)
-				trueEvent.SaveComponent(rootParent, previous);
+			IntCompare result = base.SaveComponent(rootParent, previous, autoAssignNextComponentOfPrevious) as IntCompare;
+			if (trueEvent != null) 
+				result.trueEvent = trueEvent.SaveComponent(rootParent, result, false);
 			if (falseEvent != null)
-				falseEvent.SaveComponent(rootParent, previous);
+				result.falseEvent = falseEvent.SaveComponent(rootParent, result, false);
+			return result;
 		}
 
 #endif

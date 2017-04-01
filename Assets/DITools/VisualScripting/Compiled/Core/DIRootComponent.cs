@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace DI.VisualScripting {
 	public class DIRootComponent : DIVisualComponent {
@@ -45,6 +48,7 @@ namespace DI.VisualScripting {
 				if (UnityEditor.PrefabUtility.GetPrefabObject(DIVisualScriptingData.inspectTarget.getMono.gameObject) != null)
 				{
 					//DO NOTHING
+					//disconnecting the main assets from the game object.
 					//UnityEditor.PrefabUtility.DisconnectPrefabInstance(DIVisualScriptingData.inspectTarget.getMono.gameObject);
 					UnityEditor.PrefabUtility.RecordPrefabInstancePropertyModifications(DIVisualScriptingData.inspectTarget.getMono.gameObject);
 				}
@@ -55,10 +59,30 @@ namespace DI.VisualScripting {
 		}
 		public void Export() {
 			string path = UnityEditor.EditorUtility.SaveFilePanelInProject("Save Visual Scripting", "VisualScript", "asset", "Create Visual Scripting Asset");
+			Object backupFile = null;
 			if (!string.IsNullOrEmpty(path))
 			{
+				//Check if assets is exists
+				if (AssetDatabase.LoadAssetAtPath(path, typeof(DIVisualComponent)) != null) {
+					//I want to rename the file, but I need to check if the target rename file doesn't exist. I need to loop check for it
+					int iterationCandidate = 1;
+					string pathCandidate = path;
+					pathCandidate = pathCandidate.Insert(pathCandidate.Length - 6, iterationCandidate.ToString());
+					while (AssetDatabase.LoadAssetAtPath(pathCandidate, typeof(Object)) != null){
+						iterationCandidate += 1;
+						pathCandidate = pathCandidate.Insert(pathCandidate.Length - 6, iterationCandidate.ToString());
+					}
+
+					//Backup First, by changing the name
+					AssetDatabase.RenameAsset(path, AssetDatabase.LoadAssetAtPath(path, typeof(DIVisualComponent)).name + iterationCandidate.ToString());
+					backupFile = AssetDatabase.LoadAssetAtPath(pathCandidate, typeof(DIVisualComponent));
+					UnityEditor.AssetDatabase.SaveAssets();
+					UnityEditor.AssetDatabase.Refresh();
+				}
 				DIRootComponent result = Instantiate(this);
 				result.name = name;
+				UnityEditor.AssetDatabase.CreateAsset(result, path);
+				/*
 				if (!DIVisualScriptingData.replaceActAsAppend)
 				{
 					UnityEditor.AssetDatabase.DeleteAsset(path);
@@ -67,12 +91,16 @@ namespace DI.VisualScripting {
 					UnityEditor.AssetDatabase.CreateAsset(result, path);
 				}
 				else
-					UnityEditor.AssetDatabase.AddObjectToAsset(result, path);
+				UnityEditor.AssetDatabase.AddObjectToAsset(result, path);*/
 				result.next = next;
 				if (next != null)
 					next.SaveComponent(result, result);
 
 			}
+
+			//Delete backup file
+			if (backupFile != null)
+				Debug.Log(AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(backupFile)));
 			UnityEditor.AssetDatabase.SaveAssets();
 			UnityEditor.AssetDatabase.Refresh();
 		}
@@ -216,9 +244,9 @@ namespace DI.VisualScripting {
 
 #pragma warning disable 0809
 		[System.Obsolete("Root is unique component, you can use SaveRoot instead")]
-		public override void SaveComponent(Object rootParent, DIVisualComponent previous = null)
+		public override DIVisualComponent SaveComponent(Object rootParent, DIVisualComponent previous = null, bool autoAssignNextComponentOfPrevious = true)
 		{
-			base.SaveComponent(rootParent, previous);
+			return base.SaveComponent(rootParent, previous, autoAssignNextComponentOfPrevious);
 		}
 #pragma warning restore 0809
 #endif

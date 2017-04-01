@@ -55,7 +55,8 @@ namespace DI.VisualScripting {
 		/// <param name="self"></param>
 		/// <param name="rootParent">null for saving, not null for export</param>
 		/// <param name="previous">previous comp</param>
-		public static void _SaveComponent(this DIVisualComponent self, UnityEngine.Object rootParent, DIVisualComponent previous)
+		/// <param name="autoAssignNextComponentOfPrevious">jadi result.previous.next akan diassign otomatis, jika component hasil dari percabangan (ex : branch, if) atur ke false untuk menonaktifkan automatisasi</param>
+		public static DIVisualComponent _SaveComponent(this DIVisualComponent self, UnityEngine.Object rootParent, DIVisualComponent previous, bool autoAssignNextComponentOfPrevious = true)
 		{
 #if UNITY_EDITOR
 			string debug = "";
@@ -67,7 +68,8 @@ namespace DI.VisualScripting {
 				debug += "Export ";
 				result = Object.Instantiate(self);
 				result.previous = previous;
-				result.previous.next = result;
+				if(autoAssignNextComponentOfPrevious)
+					result.previous.next = result;
 				result.name = self.name;
 				AssetDatabase.AddObjectToAsset(result, rootParent);
 				debug += " - New";
@@ -81,7 +83,8 @@ namespace DI.VisualScripting {
 					result.next = self.next;
 					if (previous != null) {
 						result.previous = previous;
-						result.previous.next = result;
+						if (autoAssignNextComponentOfPrevious)
+							result.previous.next = result;
 					}
 					result.position = self.position;
 				} else
@@ -97,6 +100,7 @@ namespace DI.VisualScripting {
 
 			if (result.next != null)
 				result.next.SaveComponent(rootParent, result);
+			return result;
 #endif
 		}
 		#region DEPRECATED
